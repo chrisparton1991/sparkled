@@ -29,19 +29,19 @@ class Led(private val ledData: ByteArray, private val ledIndex: Int, private val
         this.b = constrain(this.b + b, 0, 255)
     }
 
-    private var r: Int
+    var r: Int
         get() = (ledData[offset + index + R]).toInt() and 0xFF
         private set(r) {
             ledData[offset + index + R] = r.toByte()
         }
 
-    private var g: Int
+    var g: Int
         get() = (ledData[offset + index + G]).toInt() and 0xFF
         private set(g) {
             ledData[offset + index + G] = g.toByte()
         }
 
-    private var b: Int
+    var b: Int
         get() = (ledData[offset + index + B]).toInt() and 0xFF
         private set(b) {
             ledData[offset + index + B] = b.toByte()
@@ -53,7 +53,7 @@ class Led(private val ledData: ByteArray, private val ledIndex: Int, private val
 
         other as Led
 
-        if (!Arrays.equals(ledData, other.ledData)) return false
+        if (!ledData.contentEquals(other.ledData)) return false
         if (ledIndex != other.ledIndex) return false
         if (offset != other.offset) return false
         if (index != other.index) return false

@@ -8,6 +8,7 @@ import io.sparkled.model.entity.SequenceChannel
 import io.sparkled.model.entity.StageProp
 import io.sparkled.model.render.RenderedStagePropData
 import io.sparkled.renderer.Renderer
+import io.sparkled.renderer.enum.CompressionLevel
 import java.util.UUID
 
 object RenderUtils {
@@ -28,6 +29,7 @@ object RenderUtils {
         val sequenceChannel = SequenceChannel().setStagePropUuid(PROP_UUID).setChannelJson(channelJson)
 
         val renderResult = Renderer(
+            CompressionLevel.NONE,
             sequence,
             listOf(sequenceChannel),
             listOf(stageProp),

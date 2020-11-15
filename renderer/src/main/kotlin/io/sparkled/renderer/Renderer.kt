@@ -7,14 +7,17 @@ import io.sparkled.model.entity.SequenceChannel
 import io.sparkled.model.entity.StageProp
 import io.sparkled.model.render.Led
 import io.sparkled.model.render.RenderResult
+import io.sparkled.model.render.RenderedFrame
 import io.sparkled.model.render.RenderedStagePropData
 import io.sparkled.model.render.RenderedStagePropDataMap
+import io.sparkled.renderer.enum.CompressionLevel
 import io.sparkled.renderer.util.ChannelPropPairUtils
 import io.sparkled.renderer.util.EffectTypeRenderers
 import kotlin.math.max
 import kotlin.math.min
 
 class Renderer(
+    private val compressionLevel: CompressionLevel,
     private val sequence: Sequence,
     sequenceChannels: List<SequenceChannel>,
     stageProps: List<StageProp>,
@@ -65,7 +68,12 @@ class Renderer(
         }
     }
 
-    private fun renderRepetition(sequence: Sequence, data: RenderedStagePropData, prop: StageProp, effect: Effect) {
+    private fun renderRepetition(
+        sequence: Sequence,
+        stagePropData: RenderedStagePropData,
+        prop: StageProp,
+        effect: Effect
+    ) {
         val effectTypeCode = effect.type
         val renderer = EffectTypeRenderers[effectTypeCode]
 
@@ -73,8 +81,8 @@ class Renderer(
         val endFrame = min(this.endFrame, effect.endFrame)
 
         for (frameNumber in startFrame..endFrame) {
-            val frame = data.frames[frameNumber - this.startFrame]
-            renderer.render(sequence, data, frame, prop, effect)
+            val frame = RenderedFrame(stagePropData.startFrame, frameNumber, stagePropData.ledCount, stagePropData.data)
+            renderer.render(sequence, stagePropData, frame, prop, effect)
         }
     }
 }

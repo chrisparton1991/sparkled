@@ -21,6 +21,7 @@ import io.sparkled.persistence.sequence.SequencePersistenceService
 import io.sparkled.persistence.song.SongPersistenceService
 import io.sparkled.persistence.stage.StagePersistenceService
 import io.sparkled.renderer.Renderer
+import io.sparkled.renderer.enum.CompressionLevel
 import io.sparkled.rest.response.IdResponse
 import io.sparkled.viewmodel.sequence.SequenceViewModel
 import io.sparkled.viewmodel.sequence.SequenceViewModelConverter
@@ -148,27 +149,12 @@ open class SequenceController(
     }
 
     private fun publishSequence(sequence: Sequence, channels: List<SequenceChannel>) {
-        val renderResult = renderSequence(sequence, channels)
+        val renderResult = renderSequence(CompressionLevel.FULL, sequence, channels)
         sequencePersistenceService.publishSequence(sequence, channels, renderResult.stageProps)
     }
 
     private fun saveDraftSequence(sequence: Sequence, channels: List<SequenceChannel>) {
         sequencePersistenceService.saveSequence(sequence, channels)
-    }
-
-    private fun renderSequence(
-        sequence: Sequence,
-        sequenceChannels: List<SequenceChannel>,
-        startFrame: Int = 0,
-        endFrame: Int = Int.MAX_VALUE
-    ): RenderResult {
-        val song = songPersistenceService.getSongBySequenceId(sequence.getId()!!)
-            ?: throw EntityNotFoundException("Song not found.")
-
-        val stageProps = stagePersistenceService.getStagePropsByStageId(sequence.getStageId()!!)
-        val endFrameBounded = min(endFrame, SequenceUtils.getFrameCount(song, sequence) - 1)
-
-        return Renderer(sequence, sequenceChannels, stageProps, startFrame, endFrameBounded).render()
     }
 
     @Delete("/{id}")
@@ -198,7 +184,23 @@ open class SequenceController(
 
         val end = start + frames - 1
         return HttpResponse.ok(
-            renderSequence(sequence, sequenceChannels, start, end)
+            renderSequence(CompressionLevel.NONE, sequence, sequenceChannels, start, end)
         )
+    }
+
+    private fun renderSequence(
+        compressionLevel: CompressionLevel,
+        sequence: Sequence,
+        sequenceChannels: List<SequenceChannel>,
+        startFrame: Int = 0,
+        endFrame: Int = Int.MAX_VALUE
+    ): RenderResult {
+        val song = songPersistenceService.getSongBySequenceId(sequence.getId()!!)
+            ?: throw EntityNotFoundException("Song not found.")
+
+        val stageProps = stagePersistenceService.getStagePropsByStageId(sequence.getStageId()!!)
+        val endFrameBounded = min(endFrame, SequenceUtils.getFrameCount(song, sequence) - 1)
+
+        return Renderer(compressionLevel, sequence, sequenceChannels, stageProps, startFrame, endFrameBounded).render()
     }
 }

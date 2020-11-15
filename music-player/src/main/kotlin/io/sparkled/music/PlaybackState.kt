@@ -18,12 +18,12 @@ data class PlaybackState(
     val sequence: Sequence? = null,
     val song: Song? = null,
     val songAudio: SongAudio? = null,
-    val renderedStageProps: RenderedStagePropDataMap? = null,
+    val renderedStageProps: RenderedStagePropDataMap = RenderedStagePropDataMap(),
     val stageProps: Map<String, StageProp> = emptyMap()
 ) {
 
     val isEmpty: Boolean
-        get() = sequences == null || sequence == null || song == null || songAudio == null || renderedStageProps == null
+        get() = sequences == null || sequence == null || song == null || songAudio == null
 
     val progress: Double
         get() = progressFunction.invoke()

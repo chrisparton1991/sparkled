@@ -8,7 +8,6 @@ import javax.persistence.EntityManagerFactory
 
 @Singleton
 class QueryFactory(
-    val entityManagerFactory: EntityManagerFactory,
     private val entityManagerProvider: Provider<EntityManager>
 ) : JPAQueryFactory(entityManagerProvider) {
 

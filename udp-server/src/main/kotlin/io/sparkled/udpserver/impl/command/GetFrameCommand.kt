@@ -1,10 +1,10 @@
 package io.sparkled.udpserver.impl.command
 
-import io.sparkled.model.render.RenderedFrame
 import io.sparkled.model.setting.SettingsCache
 import io.sparkled.model.util.SequenceUtils
 import io.sparkled.music.PlaybackState
 import java.net.InetAddress
+import java.nio.ByteBuffer
 import kotlin.math.min
 import kotlin.math.round
 
@@ -45,19 +45,32 @@ class GetFrameCommand : UdpCommand {
                 val frameCount = SequenceUtils.getFrameCount(playbackState.song!!, playbackState.sequence!!)
 
                 val frameIndex = min(frameCount - 1, round(playbackState.progress * frameCount).toInt())
-                val renderedFrame = getRenderedFrame(playbackState, stagePropCode, frameIndex)
-                renderedFrame?.getData() ?: blackFrame
+                getRenderedFrame(playbackState, stagePropCode, frameIndex)
             }
         }
     }
 
-    private fun getRenderedFrame(playbackState: PlaybackState, stagePropCode: String, frameIndex: Int): RenderedFrame? {
-        val renderedStageProps = playbackState.renderedStageProps
+    private fun getRenderedFrame(playbackState: PlaybackState, stagePropCode: String, frameIndex: Int): ByteArray {
         val stagePropUuid = playbackState.stageProps[stagePropCode]?.getUuid()
 
-        val renderedStagePropData = renderedStageProps!![stagePropUuid]
-        val frames = renderedStagePropData?.frames ?: emptyList()
-        return if (frameIndex >= frames.size) null else frames[frameIndex]
+        val renderedFrame = playbackState.renderedStageProps[stagePropUuid]
+        return if (renderedFrame == null || frameIndex < 0 || frameIndex >= renderedFrame.frameCount) blackFrame else {
+            val startIndex = bytesToInt(renderedFrame.data, frameIndex)
+            val endIndex = if (frameIndex < renderedFrame.frameCount - 1) {
+                bytesToInt(renderedFrame.data, frameIndex + 1)
+            } else {
+                renderedFrame.data.size - 1
+            }
+
+            val frame = ByteArray(endIndex - startIndex + 1)
+            System.arraycopy(renderedFrame.data, startIndex, frame, 0, endIndex - startIndex + 1)
+            blackFrame
+        }
+    }
+
+    private fun bytesToInt(bytes: ByteArray, index: Int): Int {
+        val fourBytes = byteArrayOf(bytes[index], bytes[index + 1], bytes[index + 2], bytes[index + 3])
+        return ByteBuffer.wrap(fourBytes).int
     }
 
     private fun buildResponse(header: ByteArray, frameData: ByteArray): ByteArray {
@@ -70,6 +83,6 @@ class GetFrameCommand : UdpCommand {
 
     companion object {
         const val KEY = "GF"
-        private val blackFrame = byteArrayOf(0, 0, 0)
+        private val blackFrame = byteArrayOf(0b0001, 0, 0, 0)
     }
 }
