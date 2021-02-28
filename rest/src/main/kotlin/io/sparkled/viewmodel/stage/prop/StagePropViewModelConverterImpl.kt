@@ -1,50 +1,52 @@
 package io.sparkled.viewmodel.stage.prop
 
-import io.sparkled.model.entity.StageProp
-import io.sparkled.persistence.stage.StagePersistenceService
+import io.sparkled.model.entity.v2.StagePropEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getById
 import javax.inject.Singleton
 
 @Singleton
 class StagePropViewModelConverterImpl(
-    private val stagePersistenceService: StagePersistenceService
+    private val db: DbService
 ) : StagePropViewModelConverter() {
 
-    override fun toViewModel(model: StageProp): StagePropViewModel {
+    override fun toViewModel(model: StagePropEntity): StagePropViewModel {
         return StagePropViewModel()
-            .setUuid(model.getUuid())
-            .setStageId(model.getStageId())
-            .setCode(model.getCode())
-            .setName(model.getName())
-            .setType(model.getType())
-            .setLedCount(model.getLedCount())
-            .setReverse(model.isReverse())
-            .setPositionX(model.getPositionX())
-            .setPositionY(model.getPositionY())
-            .setScaleX(model.getScaleX())
-            .setScaleY(model.getScaleY())
-            .setRotation(model.getRotation())
-            .setBrightness(model.getBrightness())
-            .setDisplayOrder(model.getDisplayOrder())
+            .setUuid(model.uuid)
+            .setStageId(model.stageId)
+            .setCode(model.code)
+            .setName(model.name)
+            .setType(model.type)
+            .setLedCount(model.ledCount)
+            .setReverse(model.reverse)
+            .setPositionX(model.positionX)
+            .setPositionY(model.positionY)
+            .setScaleX(model.scaleX)
+            .setScaleY(model.scaleY)
+            .setRotation(model.rotation)
+            .setBrightness(model.brightness)
+            .setDisplayOrder(model.displayOrder)
     }
 
-    override fun toModel(viewModel: StagePropViewModel): StageProp {
-        val model = stagePersistenceService.getStagePropByUuid(viewModel.getStageId()!!, viewModel.getUuid()!!)
-            ?: StageProp()
+    override fun toModel(viewModel: StagePropViewModel): StagePropEntity {
+        val stageId = viewModel.getStageId()!!
+        val model = db.getById(stageId) ?: StagePropEntity(stageId = stageId)
 
-        return model
-            .setUuid(viewModel.getUuid())
-            .setStageId(viewModel.getStageId())
-            .setCode(viewModel.getCode())
-            .setName(viewModel.getName())
-            .setType(viewModel.getType())
-            .setLedCount(viewModel.getLedCount())
-            .setReverse(viewModel.isReverse())
-            .setPositionX(viewModel.getPositionX())
-            .setPositionY(viewModel.getPositionY())
-            .setScaleX(viewModel.getScaleX())
-            .setScaleY(viewModel.getScaleY())
-            .setRotation(viewModel.getRotation())
-            .setBrightness(viewModel.getBrightness())
-            .setDisplayOrder(viewModel.getDisplayOrder())
+        return model.copy(
+            uuid = viewModel.getUuid()!!,
+            stageId = viewModel.getStageId()!!,
+            code = viewModel.getCode()!!,
+            name = viewModel.getName()!!,
+            type = viewModel.getType()!!,
+            ledCount = viewModel.getLedCount()!!,
+            reverse = viewModel.isReverse()!!,
+            positionX = viewModel.getPositionX()!!,
+            positionY = viewModel.getPositionY()!!,
+            scaleX = viewModel.getScaleX()!!,
+            scaleY = viewModel.getScaleY()!!,
+            rotation = viewModel.getRotation()!!,
+            brightness = viewModel.getBrightness()!!,
+            displayOrder = viewModel.getDisplayOrder()!!,
+        )
     }
 }

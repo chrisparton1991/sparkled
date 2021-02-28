@@ -8,15 +8,10 @@ import io.sparkled.persistence.playlist.PlaylistPersistenceService
 import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
 import io.sparkled.persistence.setting.SettingPersistenceService
 import io.sparkled.scheduler.SchedulerService
-import javax.inject.Singleton
-import org.quartz.CronScheduleBuilder
-import org.quartz.JobBuilder
-import org.quartz.JobDataMap
-import org.quartz.Scheduler
-import org.quartz.SchedulerException
-import org.quartz.TriggerBuilder
+import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
+import javax.inject.Singleton
 
 @Singleton
 open class SchedulerServiceImpl(

@@ -22,6 +22,11 @@ datasources:
     username: ${JDBC_USER:}
     password: ${JDBC_PASSWORD:}
     driverClassName: ${JDBC_DRIVER:org.h2.Driver}
+  sqlite:
+    url: ${JDBC_URL:`jdbc:sqlite:sparkled.db`}
+    username: ${JDBC_USER:}
+    password: ${JDBC_PASSWORD:}
+    driverClassName: ${JDBC_DRIVER:org.sqlite.JDBC}
 
 jackson:
   serializationInclusion: ALWAYS # Include empty arrays in JSON output
@@ -38,6 +43,12 @@ liquibase:
   datasources:
     default:
       change-log: 'classpath:db/liquibase-changelog.xml'
+      enabled: false
+#    default:
+#      enabled: false
+#      change-log: 'classpath:db/liquibase-changelog.xml'
+#    sqlite:
+#      change-log: 'classpath:db/liquibase-changelog.xml'
 
 sparkled:
   directory: './data'

@@ -1,13 +1,15 @@
 package io.sparkled.rest
 
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Post
-import io.micronaut.http.annotation.Put
+import io.micronaut.http.annotation.*
 import io.micronaut.spring.tx.annotation.Transactional
+import io.sparkled.model.entity.v2.StageEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getAll
+import io.sparkled.persistence.getById
+import io.sparkled.persistence.insert
 import io.sparkled.persistence.stage.StagePersistenceService
+import io.sparkled.persistence.v2.query.stage.GetStagePropsByStageIdQuery
 import io.sparkled.rest.response.IdResponse
 import io.sparkled.viewmodel.stage.StageViewModel
 import io.sparkled.viewmodel.stage.StageViewModelConverter
@@ -16,6 +18,7 @@ import io.sparkled.viewmodel.stage.search.StageSearchViewModelConverter
 
 @Controller("/api/stages")
 open class StageController(
+    private val db: DbService,
     private val stagePersistenceService: StagePersistenceService,
     private val stageSearchViewModelConverter: StageSearchViewModelConverter,
     private val stageViewModelConverter: StageViewModelConverter,
@@ -25,23 +28,20 @@ open class StageController(
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllStages(): HttpResponse<Any> {
-        val stages = stagePersistenceService.getAllStages()
+        val stages = db.getAll<StageEntity>(orderBy = "name")
         return HttpResponse.ok(stageSearchViewModelConverter.toViewModels(stages))
     }
 
     @Get("/{id}")
     @Transactional(readOnly = true)
     open fun getStage(id: Int): HttpResponse<Any> {
-        val stage = stagePersistenceService.getStageById(id)
+        val stage = db.getById<StageEntity>(id)
 
         if (stage != null) {
             val viewModel = stageViewModelConverter.toViewModel(stage)
 
-            val stageProps = stagePersistenceService
-                .getStagePropsByStageId(id)
-                .asSequence()
+            val stageProps = db.query(GetStagePropsByStageIdQuery(id))
                 .map(stagePropViewModelConverter::toViewModel)
-                .toList()
             viewModel.setStageProps(stageProps)
 
             return HttpResponse.ok(viewModel)
@@ -54,8 +54,8 @@ open class StageController(
     @Transactional
     open fun createStage(stageViewModel: StageViewModel): HttpResponse<Any> {
         val stage = stageViewModelConverter.toModel(stageViewModel)
-        val savedStage = stagePersistenceService.createStage(stage)
-        return HttpResponse.ok(IdResponse(savedStage.getId()!!))
+        val stageId = db.insert(stage)
+        return HttpResponse.ok(IdResponse(stageId.toInt()))
     }
 
     @Put("/{id}")
@@ -65,12 +65,11 @@ open class StageController(
 
         val stage = stageViewModelConverter.toModel(stageViewModel)
         val stageProps = stageViewModel.getStageProps()
-            .asSequence()
             .map(stagePropViewModelConverter::toModel)
-            .map { it.setStageId(id) }
-            .toList()
+            .map { it.copy(stageId = id) }
 
-        stagePersistenceService.saveStage(stage, stageProps)
+        // TODO
+//        stagePersistenceService.saveStage(stage, stageProps)
         return HttpResponse.ok()
     }
 

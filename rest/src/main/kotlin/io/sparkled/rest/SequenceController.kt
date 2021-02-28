@@ -4,23 +4,22 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Post
-import io.micronaut.http.annotation.Put
-import io.micronaut.http.annotation.QueryValue
+import io.micronaut.http.annotation.*
 import io.micronaut.spring.tx.annotation.Transactional
 import io.sparkled.model.animation.SequenceChannelEffects
 import io.sparkled.model.entity.Sequence
 import io.sparkled.model.entity.SequenceChannel
 import io.sparkled.model.entity.SequenceStatus
+import io.sparkled.model.entity.v2.SequenceEntity
 import io.sparkled.model.render.RenderResult
 import io.sparkled.model.util.SequenceUtils
 import io.sparkled.model.validator.exception.EntityNotFoundException
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getAll
 import io.sparkled.persistence.sequence.SequencePersistenceService
 import io.sparkled.persistence.song.SongPersistenceService
 import io.sparkled.persistence.stage.StagePersistenceService
+import io.sparkled.persistence.v2.query.sequence.GetStageBySequenceIdQuery
 import io.sparkled.renderer.Renderer
 import io.sparkled.renderer.SparkledPluginManager
 import io.sparkled.rest.response.IdResponse
@@ -30,13 +29,14 @@ import io.sparkled.viewmodel.sequence.channel.SequenceChannelViewModelConverter
 import io.sparkled.viewmodel.sequence.search.SequenceSearchViewModelConverter
 import io.sparkled.viewmodel.stage.StageViewModelConverter
 import io.sparkled.viewmodel.stage.prop.StagePropViewModelConverter
-import java.util.UUID
+import java.util.*
 import kotlin.math.min
 
 @Controller("/api/sequences")
 open class SequenceController(
     private val pluginManager: SparkledPluginManager,
     private val objectMapper: ObjectMapper,
+    private val db: DbService,
     private val sequencePersistenceService: SequencePersistenceService,
     private val songPersistenceService: SongPersistenceService,
     private val stagePersistenceService: StagePersistenceService,
@@ -50,7 +50,7 @@ open class SequenceController(
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllSequences(): HttpResponse<Any> {
-        val sequences = sequencePersistenceService.getAllSequences()
+        val sequences = db.getAll<SequenceEntity>(orderBy = "name")
         return HttpResponse.ok(sequenceSearchViewModelConverter.toViewModels(sequences))
     }
 
@@ -78,18 +78,20 @@ open class SequenceController(
     @Get("/{id}/stage")
     @Transactional(readOnly = true)
     open fun getSequenceStage(id: Int): HttpResponse<Any> {
-        val stage = sequencePersistenceService.getStageBySequenceId(id)
+        val stage = db.query(GetStageBySequenceIdQuery(id))
 
         return if (stage != null) {
-            val viewModel = stageViewModelConverter.toViewModel(stage)
-            val stageProps = stagePersistenceService
-                .getStagePropsByStageId(stage.getId()!!)
-                .asSequence()
-                .map(stagePropViewModelConverter::toViewModel)
-                .toList()
-
-            viewModel.setStageProps(stageProps)
-            HttpResponse.ok(viewModel)
+            // TODO
+//            val viewModel = stageViewModelConverter.toViewModel(stage)
+//            val stageProps = stagePersistenceService
+//                .getStagePropsByStageId(stage.id)
+//                .asSequence()
+//                .map(stagePropViewModelConverter::toViewModel)
+//                .toList()
+//
+//            viewModel.setStageProps(stageProps)
+//            HttpResponse.ok(viewModel)
+            HttpResponse.badRequest()
         } else {
             HttpResponse.notFound("Stage not found for sequence.")
         }
@@ -172,7 +174,15 @@ open class SequenceController(
         val stageProps = stagePersistenceService.getStagePropsByStageId(sequence.getStageId()!!)
         val endFrameBounded = min(endFrame, SequenceUtils.getFrameCount(song, sequence) - 1)
 
-        return Renderer(pluginManager, objectMapper, sequence, sequenceChannels, stageProps, startFrame, endFrameBounded).render()
+        return Renderer(
+            pluginManager,
+            objectMapper,
+            sequence,
+            sequenceChannels,
+            stageProps,
+            startFrame,
+            endFrameBounded
+        ).render()
     }
 
     @Delete("/{id}")

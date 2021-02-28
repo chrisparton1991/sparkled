@@ -1,12 +1,11 @@
 package io.sparkled.rest
 
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Post
-import io.micronaut.http.annotation.Put
+import io.micronaut.http.annotation.*
 import io.micronaut.spring.tx.annotation.Transactional
+import io.sparkled.model.entity.v2.PlaylistEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getAll
 import io.sparkled.persistence.playlist.PlaylistPersistenceService
 import io.sparkled.rest.response.IdResponse
 import io.sparkled.viewmodel.playlist.PlaylistViewModel
@@ -16,6 +15,7 @@ import io.sparkled.viewmodel.playlist.sequence.PlaylistSequenceViewModelConverte
 
 @Controller("/api/playlists")
 open class PlaylistController(
+    private val db: DbService,
     private val playlistPersistenceService: PlaylistPersistenceService,
     private val playlistSearchViewModelConverter: PlaylistSearchViewModelConverter,
     private val playlistViewModelConverter: PlaylistViewModelConverter,
@@ -25,7 +25,7 @@ open class PlaylistController(
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllPlaylists(): HttpResponse<Any> {
-        val playlists = playlistPersistenceService.getAllPlaylists()
+        val playlists = db.getAll<PlaylistEntity>(orderBy = "name")
         return HttpResponse.ok(playlistSearchViewModelConverter.toViewModels(playlists))
     }
 

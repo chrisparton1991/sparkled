@@ -1,8 +1,8 @@
 package io.sparkled.viewmodel.stage.prop
 
-import io.sparkled.model.entity.StageProp
+import io.sparkled.model.entity.v2.StagePropEntity
 import io.sparkled.viewmodel.ModelConverter
 import io.sparkled.viewmodel.ViewModelConverter
 
-abstract class StagePropViewModelConverter : ModelConverter<StageProp, StagePropViewModel>,
-    ViewModelConverter<StagePropViewModel, StageProp>
+abstract class StagePropViewModelConverter : ModelConverter<StagePropEntity, StagePropViewModel>,
+    ViewModelConverter<StagePropViewModel, StagePropEntity>

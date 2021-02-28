@@ -6,6 +6,9 @@ import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
 import io.micronaut.spring.tx.annotation.Transactional
+import io.sparkled.model.entity.v2.ScheduledJobEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getAll
 import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
 import io.sparkled.rest.response.IdResponse
 import io.sparkled.scheduler.SchedulerService
@@ -15,6 +18,7 @@ import io.sparkled.viewmodel.scheduledjob.search.ScheduledJobSearchViewModelConv
 
 @Controller("/api/scheduledJobs")
 open class ScheduledJobController(
+    private val db: DbService,
     private val schedulerService: SchedulerService,
     private val scheduledJobPersistenceService: ScheduledJobPersistenceService,
     private val scheduledJobSearchViewModelConverter: ScheduledJobSearchViewModelConverter,
@@ -24,7 +28,7 @@ open class ScheduledJobController(
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllScheduledJobs(): HttpResponse<Any> {
-        val scheduledJobs = scheduledJobPersistenceService.getAllScheduledJobs()
+        val scheduledJobs = db.getAll<ScheduledJobEntity>(orderBy = "id")
         return HttpResponse.ok(scheduledJobSearchViewModelConverter.toViewModels(scheduledJobs))
     }
 

@@ -4,7 +4,9 @@ import io.micronaut.runtime.event.annotation.EventListener
 import io.micronaut.runtime.server.event.ServerShutdownEvent
 import io.micronaut.runtime.server.event.ServerStartupEvent
 import io.micronaut.spring.tx.annotation.Transactional
+import io.sparkled.persistence.DbService
 import io.sparkled.persistence.setting.SettingPersistenceService
+import io.sparkled.persistence.v2.query.common.InsertQuery
 import io.sparkled.renderer.SparkledPluginManager
 import io.sparkled.scheduler.SchedulerService
 import io.sparkled.udpserver.LedDataStreamer
@@ -19,7 +21,8 @@ open class ServiceManager(
     private val schedulerService: SchedulerService,
     private val udpServer: UdpServer,
     private val ledDataStreamer: LedDataStreamer,
-    private val pluginManager: SparkledPluginManager
+    private val pluginManager: SparkledPluginManager,
+    private val db: DbService
 ) {
 
     @EventListener
@@ -28,6 +31,7 @@ open class ServiceManager(
         pluginManager.reloadPlugins()
         settingPersistenceService.reloadSettingsCache()
         schedulerService.start()
+        db.init()
 
         val socket = buildSocket()
         udpServer.start(socket)
@@ -37,6 +41,7 @@ open class ServiceManager(
     }
 
     private fun buildSocket(): DatagramSocket {
+        // TODO make configurable.
         val socket = DatagramSocket(2812)
 
         try {

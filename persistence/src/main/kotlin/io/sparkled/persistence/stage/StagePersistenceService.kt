@@ -8,8 +8,6 @@ interface StagePersistenceService {
 
     fun createStage(stage: Stage): Stage
 
-    fun getAllStages(): List<Stage>
-
     fun getStageById(stageId: Int): Stage?
 
     fun getStagePropsByStageId(stageId: Int): List<StageProp>

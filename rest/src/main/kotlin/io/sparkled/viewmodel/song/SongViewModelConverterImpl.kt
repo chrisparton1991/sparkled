@@ -1,42 +1,39 @@
 package io.sparkled.viewmodel.song
 
-import io.sparkled.model.entity.Song
-import io.sparkled.persistence.song.SongPersistenceService
+import io.sparkled.model.entity.v2.SongEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getById
+import io.sparkled.persistence.v2.query.common.GetByIdQuery
 import io.sparkled.viewmodel.exception.ViewModelConversionException
 import javax.inject.Singleton
 
 @Singleton
 class SongViewModelConverterImpl(
-    private val songPersistenceService: SongPersistenceService
+    private val db: DbService
 ) : SongViewModelConverter() {
 
-    override fun toViewModel(model: Song): SongViewModel {
+    override fun toViewModel(model: SongEntity): SongViewModel {
         return SongViewModel()
-            .setId(model.getId())
-            .setName(model.getName())
-            .setArtist(model.getArtist())
-            .setAlbum(model.getAlbum())
-            .setDurationMs(model.getDurationMs())
+            .setId(model.id)
+            .setName(model.name)
+            .setArtist(model.artist)
+            .setAlbum(model.album)
+            .setDurationMs(model.durationMs)
     }
 
-    override fun toModel(viewModel: SongViewModel): Song {
+    override fun toModel(viewModel: SongViewModel): SongEntity {
         val songId = viewModel.getId()
         val model = getSong(songId)
 
-        return model
-            .setId(viewModel.getId())
-            .setName(viewModel.getName())
-            .setArtist(viewModel.getArtist())
-            .setAlbum(viewModel.getAlbum())
-            .setDurationMs(viewModel.getDurationMs())
+        return model.copy(
+            name = viewModel.getName()!!,
+            artist = viewModel.getArtist()!!,
+            album = viewModel.getAlbum()!!,
+            durationMs = viewModel.getDurationMs()!!
+        )
     }
 
-    private fun getSong(songId: Int?): Song {
-        if (songId == null) {
-            return Song()
-        }
-
-        return songPersistenceService.getSongById(songId)
-            ?: throw ViewModelConversionException("Song with ID of '$songId' not found.")
+    private fun getSong(songId: Int?): SongEntity {
+        return db.getById(songId) ?: throw ViewModelConversionException("Song with ID of '$songId' not found.")
     }
 }

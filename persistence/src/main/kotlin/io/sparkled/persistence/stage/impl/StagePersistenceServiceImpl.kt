@@ -21,10 +21,6 @@ class StagePersistenceServiceImpl(private val queryFactory: QueryFactory) : Stag
         return SaveStageQuery(stage).perform(queryFactory)
     }
 
-    override fun getAllStages(): List<Stage> {
-        return GetAllStagesQuery().perform(queryFactory)
-    }
-
     override fun getStageById(stageId: Int): Stage? {
         return GetStageByIdQuery(stageId).perform(queryFactory)
     }
