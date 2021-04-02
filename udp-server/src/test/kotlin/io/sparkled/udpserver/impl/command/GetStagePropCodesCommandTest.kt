@@ -1,17 +1,16 @@
 package io.sparkled.udpserver.impl.command
 
-import io.sparkled.model.entity.Sequence
-import io.sparkled.model.entity.Song
-import io.sparkled.model.entity.SongAudio
-import io.sparkled.model.entity.StageProp
+import io.sparkled.model.entity.v2.SequenceEntity
+import io.sparkled.model.entity.v2.SongAudioEntity
+import io.sparkled.model.entity.v2.SongEntity
+import io.sparkled.model.entity.v2.StagePropEntity
 import io.sparkled.model.render.RenderedStagePropDataMap
-import io.sparkled.model.setting.SettingsCache
 import io.sparkled.music.PlaybackState
-import java.nio.charset.StandardCharsets
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.junit.jupiter.api.Test
 import java.net.InetAddress
+import java.nio.charset.StandardCharsets
 
 internal class GetStagePropCodesCommandTest {
 
@@ -22,19 +21,19 @@ internal class GetStagePropCodesCommandTest {
             ipAddress = InetAddress.getLocalHost(),
             port = 2812,
             args = listOf(GetStagePropCodesCommand.KEY),
-            settings = SettingsCache(0),
+            globalBrightness = 0,
             playbackState = PlaybackState(
                 sequences = emptyList(),
                 sequenceIndex = 0,
                 progressFunction = { 0.0 },
-                sequence = Sequence(),
-                song = Song(),
-                songAudio = SongAudio(),
+                sequence = SequenceEntity(),
+                song = SongEntity(),
+                songAudio = SongAudioEntity(),
                 renderedStageProps = RenderedStagePropDataMap(),
                 stageProps = mapOf(
-                    "P1" to StageProp().setCode("P1").setDisplayOrder(1),
-                    "P2" to StageProp().setCode("P2").setDisplayOrder(3),
-                    "P3" to StageProp().setCode("P3").setDisplayOrder(2)
+                    "P1" to StagePropEntity(code = "P1", displayOrder = 1),
+                    "P2" to StagePropEntity(code = "P2", displayOrder = 3),
+                    "P3" to StagePropEntity(code = "P3", displayOrder = 2)
                 )
             )
         )

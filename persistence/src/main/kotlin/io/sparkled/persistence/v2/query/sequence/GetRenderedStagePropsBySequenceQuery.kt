@@ -12,11 +12,15 @@ import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.kotlin.mapTo
 
 class GetRenderedStagePropsBySequenceQuery(
-    private val sequence: SequenceEntity,
-    private val song: SongEntity
+    private val sequence: SequenceEntity?,
+    private val song: SongEntity?
 ) : DbQuery<RenderedStagePropDataMap> {
 
     override fun execute(jdbi: Jdbi, objectMapper: ObjectMapper): RenderedStagePropDataMap {
+        if (sequence == null || song == null) {
+            return RenderedStagePropDataMap()
+        }
+
         return jdbi.perform { handle ->
             handle.createQuery(query)
                 .bind("sequenceId", sequence.id)

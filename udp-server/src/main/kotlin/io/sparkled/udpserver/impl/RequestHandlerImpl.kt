@@ -1,23 +1,23 @@
 package io.sparkled.udpserver.impl
 
 import io.sparkled.music.PlaybackStateService
-import io.sparkled.persistence.setting.SettingPersistenceService
+import io.sparkled.persistence.cache.CacheService
 import io.sparkled.udpserver.RequestHandler
 import io.sparkled.udpserver.impl.command.GetFrameCommand
 import io.sparkled.udpserver.impl.command.GetStagePropCodesCommand
 import io.sparkled.udpserver.impl.command.GetVersionCommand
 import io.sparkled.udpserver.impl.command.SubscribeCommand
 import io.sparkled.udpserver.impl.subscriber.UdpClientSubscribers
+import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
 import java.net.DatagramSocket
-import javax.inject.Singleton
-import org.slf4j.LoggerFactory
 import java.net.InetAddress
+import javax.inject.Singleton
 
 @Singleton
 class RequestHandlerImpl(
     private val playbackStateService: PlaybackStateService,
-    private val settingPersistenceService: SettingPersistenceService,
+    private val cache: CacheService,
     subscribers: UdpClientSubscribers
 ) : RequestHandler {
 
@@ -42,11 +42,10 @@ class RequestHandlerImpl(
 
     private fun getResponse(ipAddress: InetAddress, port: Int, args: List<String>): ByteArray? {
         val playbackState = playbackStateService.getPlaybackState()
-        val settings = settingPersistenceService.settings
 
         val command = args[0]
         val requestCommand = commands[command] ?: throw IllegalArgumentException("Unrecognised command '$command'.")
-        return requestCommand.handle(ipAddress, port, args, settings, playbackState)
+        return requestCommand.handle(ipAddress, port, args, cache.brightness.get(), playbackState)
     }
 
     private fun respond(serverSocket: DatagramSocket, receivePacket: DatagramPacket, data: ByteArray) {

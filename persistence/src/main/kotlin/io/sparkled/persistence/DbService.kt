@@ -4,7 +4,6 @@ import io.sparkled.model.util.IdUtils
 import io.sparkled.persistence.playlist.PlaylistPersistenceService
 import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
 import io.sparkled.persistence.sequence.SequencePersistenceService
-import io.sparkled.persistence.setting.SettingPersistenceService
 import io.sparkled.persistence.song.SongPersistenceService
 import io.sparkled.persistence.stage.StagePersistenceService
 import io.sparkled.persistence.v2.query.common.*
@@ -13,7 +12,6 @@ interface DbService {
     val playlist: PlaylistPersistenceService
     val scheduledJob: ScheduledJobPersistenceService
     val sequence: SequencePersistenceService
-    val setting: SettingPersistenceService
     val song: SongPersistenceService
     val stage: StagePersistenceService
     fun init()
@@ -27,7 +25,7 @@ inline fun <reified T : Any> DbService.getAll(
     return query(GetAllQuery(T::class, orderBy, desc))
 }
 
-inline fun <reified T : Any> DbService.getById(id: Int?): T? {
+inline fun <reified T : Any> DbService.getById(id: Any?): T? {
     return query(GetByIdQuery(T::class, id ?: IdUtils.NO_ID))
 }
 

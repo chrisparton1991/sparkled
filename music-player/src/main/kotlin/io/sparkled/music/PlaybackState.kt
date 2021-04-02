@@ -1,9 +1,9 @@
 package io.sparkled.music
 
-import io.sparkled.model.entity.Sequence
-import io.sparkled.model.entity.Song
-import io.sparkled.model.entity.SongAudio
-import io.sparkled.model.entity.StageProp
+import io.sparkled.model.entity.v2.SequenceEntity
+import io.sparkled.model.entity.v2.SongAudioEntity
+import io.sparkled.model.entity.v2.SongEntity
+import io.sparkled.model.entity.v2.StagePropEntity
 import io.sparkled.model.render.RenderedStagePropDataMap
 
 /**
@@ -11,15 +11,15 @@ import io.sparkled.model.render.RenderedStagePropDataMap
  * playback and associated rendered data for streaming to clients.
  */
 data class PlaybackState(
-    val sequences: List<Sequence>? = null,
-    val sequenceIndex: Int = 0,
-    val repeat: Boolean = true,
-    private val progressFunction: () -> Double = { 0.0 },
-    val sequence: Sequence? = null,
-    val song: Song? = null,
-    val songAudio: SongAudio? = null,
-    val renderedStageProps: RenderedStagePropDataMap? = null,
-    val stageProps: Map<String, StageProp> = emptyMap()
+        val sequences: List<SequenceEntity>? = null,
+        val sequenceIndex: Int = 0,
+        val repeat: Boolean = true,
+        private val progressFunction: () -> Double = { 0.0 },
+        val sequence: SequenceEntity? = null,
+        val song: SongEntity? = null,
+        val songAudio: SongAudioEntity? = null,
+        val renderedStageProps: RenderedStagePropDataMap? = null,
+        val stageProps: Map<String, StagePropEntity> = emptyMap()
 ) {
 
     val isEmpty: Boolean

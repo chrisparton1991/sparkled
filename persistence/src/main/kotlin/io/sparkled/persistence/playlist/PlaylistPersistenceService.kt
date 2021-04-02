@@ -8,15 +8,6 @@ import java.util.UUID
 
 interface PlaylistPersistenceService {
 
-    fun createPlaylist(playlist: Playlist): Playlist
-
-    fun getAllPlaylists(): List<Playlist>
-
-    fun getPlaylistSummaries(): Map<Int, PlaylistSummary>
-
-    fun getPlaylistById(playlistId: Int): Playlist?
-
-    fun getSequenceAtPlaylistIndex(playlistId: Int, index: Int): Sequence?
 
     fun getSequencesByPlaylistId(playlistId: Int): List<Sequence>
 

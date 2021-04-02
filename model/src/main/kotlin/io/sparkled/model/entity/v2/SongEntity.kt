@@ -6,8 +6,8 @@ import io.sparkled.model.util.IdUtils
 @Entity(name = "song", idField = "id")
 data class SongEntity(
     val id: Int = IdUtils.NO_ID,
-    val name: String,
-    val artist: String?,
-    val album: String?,
-    val durationMs: Int
+    val name: String = "",
+    val artist: String? = null,
+    val album: String? = null,
+    val durationMs: Int = 0
 )

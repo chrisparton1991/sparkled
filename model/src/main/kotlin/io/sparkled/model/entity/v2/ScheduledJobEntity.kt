@@ -7,8 +7,8 @@ import io.sparkled.model.util.IdUtils
 @Entity(name = "scheduled_job", idField = "id")
 data class ScheduledJobEntity(
     val id: Int = IdUtils.NO_ID,
-    val action: ScheduledJobAction,
-    val cronExpression: String,
-    val value: String?,
-    val playlistId: Int?,
+    val action: ScheduledJobAction = ScheduledJobAction.NONE,
+    val cronExpression: String = "",
+    val value: String? = "",
+    val playlistId: Int? = null,
 )

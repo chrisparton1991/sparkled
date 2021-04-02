@@ -1,6 +1,5 @@
 package io.sparkled.udpserver.impl.command
 
-import io.sparkled.model.setting.SettingsCache
 import io.sparkled.music.PlaybackState
 import io.sparkled.udpserver.impl.subscriber.UdpClientSubscribers
 import io.sparkled.udpserver.impl.subscriber.UdpClientSubscription
@@ -17,10 +16,10 @@ class SubscribeCommand(private val subscribers: UdpClientSubscribers) : UdpComma
         ipAddress: InetAddress,
         port: Int,
         args: List<String>,
-        settings: SettingsCache,
+        globalBrightness: Int,
         playbackState: PlaybackState
     ): ByteArray? {
-        // TODO error handling for malformed request.
+        // TODO ditch clientId concept as stage props can now be grouped.
         val stagePropCode = args[1]
         val clientId = args[2].toInt()
 

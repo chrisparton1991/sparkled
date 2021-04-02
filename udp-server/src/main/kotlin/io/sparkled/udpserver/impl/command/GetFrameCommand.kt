@@ -1,7 +1,6 @@
 package io.sparkled.udpserver.impl.command
 
 import io.sparkled.model.render.RenderedFrame
-import io.sparkled.model.setting.SettingsCache
 import io.sparkled.model.util.SequenceUtils
 import io.sparkled.music.PlaybackState
 import java.net.InetAddress
@@ -15,20 +14,18 @@ import kotlin.math.round
  */
 class GetFrameCommand : UdpCommand {
 
-    override fun handle(ipAddress: InetAddress, port: Int, args: List<String>, settings: SettingsCache, playbackState: PlaybackState): ByteArray {
+    override fun handle(ipAddress: InetAddress, port: Int, args: List<String>, globalBrightness: Int, playbackState: PlaybackState): ByteArray {
         val stagePropCode = args[1]
         val clientId = args[2].toInt()
-        val brightness = calculateBrightness(stagePropCode, settings, playbackState)
+        val brightness = calculateBrightness(stagePropCode, globalBrightness, playbackState)
 
         val headerData = buildHeader(clientId, brightness)
         val frameData = buildFrame(stagePropCode, playbackState)
         return buildResponse(headerData, frameData)
     }
 
-    private fun calculateBrightness(stagePropCode: String, settings: SettingsCache, playbackState: PlaybackState): Int {
-        val propBrightness = (playbackState.stageProps[stagePropCode]?.getBrightness() ?: 100) / 100f
-        val globalBrightness = settings.brightness
-
+    private fun calculateBrightness(stagePropCode: String, globalBrightness: Int, playbackState: PlaybackState): Int {
+        val propBrightness = (playbackState.stageProps[stagePropCode]?.brightness ?: 100) / 100f
         return (globalBrightness * propBrightness).toInt()
     }
 
@@ -53,7 +50,7 @@ class GetFrameCommand : UdpCommand {
 
     private fun getRenderedFrame(playbackState: PlaybackState, stagePropCode: String, frameIndex: Int): RenderedFrame? {
         val renderedStageProps = playbackState.renderedStageProps
-        val stagePropUuid = playbackState.stageProps[stagePropCode]?.getUuid()
+        val stagePropUuid = playbackState.stageProps[stagePropCode]?.uuid
 
         val renderedStagePropData = renderedStageProps!![stagePropUuid]
         val frames = renderedStagePropData?.frames ?: emptyList()

@@ -1,31 +1,29 @@
 package io.sparkled.viewmodel.playlist.sequence
 
-import io.sparkled.model.entity.PlaylistSequence
-import io.sparkled.model.util.IdUtils.NO_ID
-import io.sparkled.model.util.IdUtils.NO_UUID
-import io.sparkled.persistence.playlist.PlaylistPersistenceService
+import io.sparkled.model.entity.v2.PlaylistSequenceEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getById
 import javax.inject.Singleton
 
 @Singleton
 class PlaylistSequenceViewModelConverterImpl(
-    private val playlistPersistenceService: PlaylistPersistenceService
+    private val db: DbService
 ) : PlaylistSequenceViewModelConverter() {
 
-    override fun toViewModel(model: PlaylistSequence): PlaylistSequenceViewModel {
+    override fun toViewModel(model: PlaylistSequenceEntity): PlaylistSequenceViewModel {
         return PlaylistSequenceViewModel()
-            .setUuid(model.getUuid())
-            .setSequenceId(model.getSequenceId())
-            .setDisplayOrder(model.getDisplayOrder())
+            .setUuid(model.uuid)
+            .setSequenceId(model.sequenceId)
+            .setDisplayOrder(model.displayOrder)
     }
 
-    override fun toModel(viewModel: PlaylistSequenceViewModel): PlaylistSequence {
-        val model = playlistPersistenceService
-            .getPlaylistSequenceByUuid(viewModel.getSequenceId() ?: NO_ID, viewModel.getUuid() ?: NO_UUID)
-            ?: PlaylistSequence()
+    override fun toModel(viewModel: PlaylistSequenceViewModel): PlaylistSequenceEntity {
+        val model = db.getById(viewModel.getSequenceId()) ?: PlaylistSequenceEntity()
 
-        return model
-            .setUuid(viewModel.getUuid())
-            .setSequenceId(viewModel.getSequenceId())
-            .setDisplayOrder(viewModel.getDisplayOrder())
+        return model.copy(
+            uuid = viewModel.getUuid()!!,
+            sequenceId = viewModel.getSequenceId()!!,
+            displayOrder = viewModel.getDisplayOrder()!!
+        )
     }
 }

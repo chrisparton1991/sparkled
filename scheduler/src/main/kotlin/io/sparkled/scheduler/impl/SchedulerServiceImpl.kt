@@ -3,10 +3,13 @@ package io.sparkled.scheduler.impl
 import io.micronaut.spring.tx.annotation.Transactional
 import io.sparkled.model.entity.ScheduledJob
 import io.sparkled.model.entity.ScheduledJobAction
+import io.sparkled.model.entity.v2.ScheduledJobEntity
+import io.sparkled.model.setting.SettingsConstants
 import io.sparkled.music.PlaybackService
-import io.sparkled.persistence.playlist.PlaylistPersistenceService
-import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
-import io.sparkled.persistence.setting.SettingPersistenceService
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getAll
+import io.sparkled.persistence.v2.query.sequence.GetSequencesByPlaylistIdQuery
+import io.sparkled.persistence.v2.query.setting.UpdateSettingQuery
 import io.sparkled.scheduler.SchedulerService
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
@@ -15,9 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 open class SchedulerServiceImpl(
-    private val scheduledJobPersistenceService: ScheduledJobPersistenceService,
-    private val playlistPersistenceService: PlaylistPersistenceService,
-    private val settingPersistenceService: SettingPersistenceService,
+    private val db: DbService,
     private val playbackService: PlaybackService
 ) : SchedulerService {
 
@@ -42,7 +43,7 @@ open class SchedulerServiceImpl(
         scheduler.clear()
         logger.info("Cleared existing scheduled job(s).")
 
-        val scheduledJobs = scheduledJobPersistenceService.getAllScheduledJobs()
+        val scheduledJobs = db.getAll<ScheduledJobEntity>()
         scheduledJobs.forEach {
             try {
                 schedule(it)
@@ -54,7 +55,7 @@ open class SchedulerServiceImpl(
         logger.info("Started {} scheduled job(s).", scheduledJobs.size)
     }
 
-    private fun schedule(scheduledJob: ScheduledJob) {
+    private fun schedule(scheduledJob: ScheduledJobEntity) {
         val jobDataMap = JobDataMap(
             mapOf(
                 JobDelegator.SERVICE to this,
@@ -88,7 +89,7 @@ open class SchedulerServiceImpl(
     @Synchronized
     @Transactional
     open fun playPlaylist(job: ScheduledJob) {
-        val sequences = playlistPersistenceService.getSequencesByPlaylistId(job.playlistId ?: -1)
+        val sequences = db.query(GetSequencesByPlaylistIdQuery(job.playlistId))
         playbackService.play(sequences, true) // TODO: Allow repeat config via scheduler API.
     }
 
@@ -101,7 +102,10 @@ open class SchedulerServiceImpl(
     @Transactional
     open fun setBrightness(job: ScheduledJob) {
         val brightness = (job.value ?: "0")
-        settingPersistenceService.setBrightness(brightness)
+        db.query(UpdateSettingQuery(
+            code = SettingsConstants.Brightness.CODE,
+            value = brightness
+        ))
     }
 
     companion object {

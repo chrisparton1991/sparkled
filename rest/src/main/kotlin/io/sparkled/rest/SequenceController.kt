@@ -16,6 +16,7 @@ import io.sparkled.model.util.SequenceUtils
 import io.sparkled.model.validator.exception.EntityNotFoundException
 import io.sparkled.persistence.DbService
 import io.sparkled.persistence.getAll
+import io.sparkled.persistence.getById
 import io.sparkled.persistence.sequence.SequencePersistenceService
 import io.sparkled.persistence.song.SongPersistenceService
 import io.sparkled.persistence.stage.StagePersistenceService
@@ -57,7 +58,7 @@ open class SequenceController(
     @Get("/{id}")
     @Transactional(readOnly = true)
     open fun getSequence(id: Int): HttpResponse<Any> {
-        val sequence = sequencePersistenceService.getSequenceById(id)
+        val sequence = db.getById<SequenceEntity>(id)
 
         if (sequence != null) {
             val viewModel = sequenceViewModelConverter.toViewModel(sequence)

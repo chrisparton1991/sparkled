@@ -12,7 +12,6 @@ import io.sparkled.persistence.playlist.impl.query.GetPlaylistByIdQuery
 import io.sparkled.persistence.playlist.impl.query.GetPlaylistNamesQuery
 import io.sparkled.persistence.playlist.impl.query.GetPlaylistSequenceByUuidQuery
 import io.sparkled.persistence.playlist.impl.query.GetPlaylistSequencesByPlaylistIdQuery
-import io.sparkled.persistence.playlist.impl.query.GetPlaylistSummariesQuery
 import io.sparkled.persistence.playlist.impl.query.GetSequenceAtPlaylistIndexQuery
 import io.sparkled.persistence.playlist.impl.query.GetSequencesByPlaylistIdQuery
 import io.sparkled.persistence.playlist.impl.query.SavePlaylistQuery
@@ -22,10 +21,6 @@ import javax.inject.Singleton
 
 @Singleton
 class PlaylistPersistenceServiceImpl(private val queryFactory: QueryFactory) : PlaylistPersistenceService {
-
-    override fun createPlaylist(playlist: Playlist): Playlist {
-        return SavePlaylistQuery(playlist).perform(queryFactory)
-    }
 
     override fun getAllPlaylists(): List<Playlist> {
         return GetAllPlaylistsQuery().perform(queryFactory)

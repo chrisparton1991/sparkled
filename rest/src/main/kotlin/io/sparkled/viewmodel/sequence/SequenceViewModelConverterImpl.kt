@@ -1,53 +1,42 @@
 package io.sparkled.viewmodel.sequence
 
-import io.sparkled.model.entity.Sequence
-import io.sparkled.model.entity.Song
+import io.sparkled.model.entity.v2.SequenceEntity
 import io.sparkled.model.util.SequenceUtils
-import io.sparkled.persistence.sequence.SequencePersistenceService
-import io.sparkled.persistence.song.SongPersistenceService
-import io.sparkled.viewmodel.exception.ViewModelConversionException
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getById
+import io.sparkled.persistence.v2.query.song.GetSongBySequenceIdQuery
 import javax.inject.Singleton
 
 @Singleton
 class SequenceViewModelConverterImpl(
-    private val sequencePersistenceService: SequencePersistenceService,
-    private val songPersistenceService: SongPersistenceService
+    private val db: DbService,
 ) : SequenceViewModelConverter() {
 
-    override fun toViewModel(model: Sequence): SequenceViewModel {
+    override fun toViewModel(model: SequenceEntity): SequenceViewModel {
         return SequenceViewModel()
-            .setId(model.getId())
-            .setSongId(model.getSongId())
-            .setStageId(model.getStageId())
-            .setName(model.getName())
-            .setFramesPerSecond(model.getFramesPerSecond())
+            .setId(model.id)
+            .setSongId(model.songId)
+            .setStageId(model.stageId)
+            .setName(model.name)
+            .setFramesPerSecond(model.framesPerSecond)
             .setFrameCount(getFrameCount(model))
-            .setStatus(model.getStatus())
+            .setStatus(model.status)
     }
 
-    private fun getFrameCount(sequence: Sequence): Int {
-        val song = songPersistenceService.getSongBySequenceId(sequence.getId()!!) ?: Song()
-        return SequenceUtils.getFrameCount(song, sequence)
+    private fun getFrameCount(sequence: SequenceEntity): Int {
+        val song = db.query(GetSongBySequenceIdQuery(sequence.id))
+        return if (song == null) 0 else SequenceUtils.getFrameCount(song, sequence)
     }
 
-    override fun toModel(viewModel: SequenceViewModel): Sequence {
-        val sequenceId = viewModel.getId()
-        val model = getSequence(sequenceId)
+    override fun toModel(viewModel: SequenceViewModel): SequenceEntity {
+        val model = db.getById(viewModel.getId()) ?: SequenceEntity()
 
-        return model
-            .setSongId(viewModel.getSongId())
-            .setStageId(viewModel.getStageId())
-            .setName(viewModel.getName())
-            .setFramesPerSecond(viewModel.getFramesPerSecond())
-            .setStatus(viewModel.getStatus())
-    }
-
-    private fun getSequence(sequenceId: Int?): Sequence {
-        if (sequenceId == null) {
-            return Sequence()
-        }
-
-        return sequencePersistenceService.getSequenceById(sequenceId)
-            ?: throw ViewModelConversionException("Sequence with ID of '$sequenceId' not found.")
+        return model.copy(
+            songId = viewModel.getSongId()!!,
+            stageId = viewModel.getStageId()!!,
+            name = viewModel.getName()!!,
+            framesPerSecond = viewModel.getFramesPerSecond()!!,
+            status = viewModel.getStatus()!!,
+        )
     }
 }

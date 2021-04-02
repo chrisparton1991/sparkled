@@ -1,7 +1,7 @@
 package io.sparkled.udpserver.impl
 
 import io.sparkled.music.PlaybackStateService
-import io.sparkled.persistence.setting.SettingPersistenceService
+import io.sparkled.persistence.cache.CacheService
 import io.sparkled.udpserver.LedDataStreamer
 import io.sparkled.udpserver.impl.command.GetFrameCommand
 import io.sparkled.udpserver.impl.subscriber.UdpClientSubscribers
@@ -16,7 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class LedDataStreamerImpl(
     private val playbackStateService: PlaybackStateService,
-    private val settingPersistenceService: SettingPersistenceService,
+    private val cache: CacheService,
     private val subscribers: UdpClientSubscribers
 ) : LedDataStreamer {
 
@@ -40,7 +40,6 @@ class LedDataStreamerImpl(
         try {
             while (started) {
                 val iterationTime = System.currentTimeMillis()
-                val settings = settingPersistenceService.settings
                 val playbackState = playbackStateService.getPlaybackState()
 
                 try {
@@ -48,7 +47,7 @@ class LedDataStreamerImpl(
                         subscriber.value.forEach {
                             if (iterationTime - it.timestamp < SUBSCRIBER_TIMEOUT_MS) {
                                 val args = listOf("GF", it.stagePropCode, it.clientId.toString())
-                                val ledData: ByteArray = GetFrameCommand().handle(subscriber.key, it.port, args, settings, playbackState)
+                                val ledData: ByteArray = GetFrameCommand().handle(subscriber.key, it.port, args, cache.brightness.get(), playbackState)
                                 val ipAddress = subscriber.key
                                 val sendPacket = DatagramPacket(ledData, ledData.size, ipAddress, it.port)
                                 socket.send(sendPacket)
@@ -60,7 +59,7 @@ class LedDataStreamerImpl(
                         println("${System.currentTimeMillis()} Iteration took ${System.currentTimeMillis() - iterationTime} ms")
                     }
                     val elapsedMs = System.currentTimeMillis() - iterationTime
-                    val updateInterval = 1000 / (playbackState.sequence?.getFramesPerSecond() ?: 10)
+                    val updateInterval = 1000 / (playbackState.sequence?.framesPerSecond ?: 10)
                     delay(updateInterval - elapsedMs)
                 } catch (e: Exception) {
                     logger.error("Failed to send LED data to subscriber.", e)

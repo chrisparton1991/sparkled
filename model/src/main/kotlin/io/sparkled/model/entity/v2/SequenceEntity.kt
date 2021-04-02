@@ -7,9 +7,9 @@ import io.sparkled.model.util.IdUtils
 @Entity(name = "sequence", idField = "id")
 data class SequenceEntity(
     val id: Int = IdUtils.NO_ID,
-    val songId: Int,
-    val stageId: Int,
-    val name: String,
-    val framesPerSecond: Int,
-    val status: SequenceStatus,
+    val songId: Int = -1,
+    val stageId: Int = -1,
+    val name: String = "",
+    val framesPerSecond: Int = -1,
+    val status: SequenceStatus = SequenceStatus.NEW,
 )

@@ -7,7 +7,7 @@ import java.util.UUID
 @Entity(name = "stage_prop", idField = "uuid")
 data class StagePropEntity(
     val uuid: UUID = IdUtils.NO_UUID,
-    val stageId: Int,
+    val stageId: Int = -1,
     val code: String = "",
     val name: String = "",
     val type: String = "",

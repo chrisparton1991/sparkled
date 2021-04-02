@@ -1,16 +1,16 @@
 package io.sparkled.viewmodel.scheduledjob
 
-import io.sparkled.model.entity.ScheduledJob
-import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
-import io.sparkled.viewmodel.exception.ViewModelConversionException
+import io.sparkled.model.entity.v2.ScheduledJobEntity
+import io.sparkled.persistence.DbService
+import io.sparkled.persistence.getById
 import javax.inject.Singleton
 
 @Singleton
 class ScheduledJobViewModelConverterImpl(
-    private val scheduledJobPersistenceService: ScheduledJobPersistenceService
+    private val db: DbService
 ) : ScheduledJobViewModelConverter() {
 
-    override fun toViewModel(model: ScheduledJob): ScheduledJobViewModel {
+    override fun toViewModel(model: ScheduledJobEntity): ScheduledJobViewModel {
         return ScheduledJobViewModel(
             id = model.id,
             action = model.action,
@@ -20,26 +20,14 @@ class ScheduledJobViewModelConverterImpl(
         )
     }
 
-    override fun toModel(viewModel: ScheduledJobViewModel): ScheduledJob {
-        val scheduledJobId = viewModel.id
-        val model = getScheduledJob(scheduledJobId)
+    override fun toModel(viewModel: ScheduledJobViewModel): ScheduledJobEntity {
+        val model = db.getById(viewModel.id) ?: ScheduledJobEntity()
 
-        return with(model) {
-            cronExpression = viewModel.cronExpression
-            action = viewModel.action
-            value = viewModel.value
+        return model.copy(
+            cronExpression = viewModel.cronExpression!!,
+            action = viewModel.action!!,
+            value = viewModel.value,
             playlistId = viewModel.playlistId
-
-            return@with model
-        }
-    }
-
-    private fun getScheduledJob(scheduledJobId: Int?): ScheduledJob {
-        if (scheduledJobId == null) {
-            return ScheduledJob()
-        }
-
-        return scheduledJobPersistenceService.getScheduledJobById(scheduledJobId)
-            ?: throw ViewModelConversionException("Scheduled job with ID of '$scheduledJobId' not found.")
+        )
     }
 }

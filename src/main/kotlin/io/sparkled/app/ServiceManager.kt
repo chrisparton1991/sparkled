@@ -5,8 +5,6 @@ import io.micronaut.runtime.server.event.ServerShutdownEvent
 import io.micronaut.runtime.server.event.ServerStartupEvent
 import io.micronaut.spring.tx.annotation.Transactional
 import io.sparkled.persistence.DbService
-import io.sparkled.persistence.setting.SettingPersistenceService
-import io.sparkled.persistence.v2.query.common.InsertQuery
 import io.sparkled.renderer.SparkledPluginManager
 import io.sparkled.scheduler.SchedulerService
 import io.sparkled.udpserver.LedDataStreamer
@@ -17,7 +15,6 @@ import javax.inject.Singleton
 
 @Singleton
 open class ServiceManager(
-    private val settingPersistenceService: SettingPersistenceService,
     private val schedulerService: SchedulerService,
     private val udpServer: UdpServer,
     private val ledDataStreamer: LedDataStreamer,
@@ -29,7 +26,6 @@ open class ServiceManager(
     @Transactional(readOnly = true)
     open fun onStartup(event: ServerStartupEvent) {
         pluginManager.reloadPlugins()
-        settingPersistenceService.reloadSettingsCache()
         schedulerService.start()
         db.init()
 
