@@ -42,7 +42,8 @@ open class SettingController(
     open fun updateSetting(code: String, setting: Setting): HttpResponse<Any> {
         db.query(UpdateSettingQuery(
             code = SettingsConstants.Brightness.CODE,
-            value = setting.getValue() ?: "0"
+            value = setting.getValue() ?: "0",
+            cache = cache
         ))
 
         return HttpResponse.ok()

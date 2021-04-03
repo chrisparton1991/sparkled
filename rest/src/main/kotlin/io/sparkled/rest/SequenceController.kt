@@ -14,22 +14,14 @@ import io.sparkled.model.entity.v2.SequenceEntity
 import io.sparkled.model.render.RenderResult
 import io.sparkled.model.util.SequenceUtils
 import io.sparkled.model.validator.exception.EntityNotFoundException
-import io.sparkled.persistence.DbService
-import io.sparkled.persistence.getAll
-import io.sparkled.persistence.getById
-import io.sparkled.persistence.sequence.SequencePersistenceService
-import io.sparkled.persistence.song.SongPersistenceService
-import io.sparkled.persistence.stage.StagePersistenceService
+import io.sparkled.persistence.*
+import io.sparkled.persistence.v2.query.sequence.GetSequenceChannelsBySequenceIdQuery
 import io.sparkled.persistence.v2.query.sequence.GetStageBySequenceIdQuery
 import io.sparkled.renderer.Renderer
 import io.sparkled.renderer.SparkledPluginManager
 import io.sparkled.rest.response.IdResponse
+import io.sparkled.viewmodel.ViewModelConverterService
 import io.sparkled.viewmodel.sequence.SequenceViewModel
-import io.sparkled.viewmodel.sequence.SequenceViewModelConverter
-import io.sparkled.viewmodel.sequence.channel.SequenceChannelViewModelConverter
-import io.sparkled.viewmodel.sequence.search.SequenceSearchViewModelConverter
-import io.sparkled.viewmodel.stage.StageViewModelConverter
-import io.sparkled.viewmodel.stage.prop.StagePropViewModelConverter
 import java.util.*
 import kotlin.math.min
 
@@ -38,21 +30,14 @@ open class SequenceController(
     private val pluginManager: SparkledPluginManager,
     private val objectMapper: ObjectMapper,
     private val db: DbService,
-    private val sequencePersistenceService: SequencePersistenceService,
-    private val songPersistenceService: SongPersistenceService,
-    private val stagePersistenceService: StagePersistenceService,
-    private val sequenceSearchViewModelConverter: SequenceSearchViewModelConverter,
-    private val sequenceViewModelConverter: SequenceViewModelConverter,
-    private val sequenceChannelViewModelConverter: SequenceChannelViewModelConverter,
-    private val stageViewModelConverter: StageViewModelConverter,
-    private val stagePropViewModelConverter: StagePropViewModelConverter
+    private val vm: ViewModelConverterService
 ) {
 
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllSequences(): HttpResponse<Any> {
         val sequences = db.getAll<SequenceEntity>(orderBy = "name")
-        return HttpResponse.ok(sequenceSearchViewModelConverter.toViewModels(sequences))
+        return HttpResponse.ok(vm.sequenceSearch.toViewModels(sequences))
     }
 
     @Get("/{id}")
@@ -61,12 +46,9 @@ open class SequenceController(
         val sequence = db.getById<SequenceEntity>(id)
 
         if (sequence != null) {
-            val viewModel = sequenceViewModelConverter.toViewModel(sequence)
-
-            val channels = sequencePersistenceService
-                .getSequenceChannelsBySequenceId(id)
-                .asSequence()
-                .map(sequenceChannelViewModelConverter::toViewModel)
+            val viewModel = vm.sequence.toViewModel(sequence)
+            val channels = db.query(GetSequenceChannelsBySequenceIdQuery(id))
+                .map(vm.sequenceChannel::toViewModel)
                 .toList()
             viewModel.setChannels(channels)
 
@@ -115,7 +97,7 @@ open class SequenceController(
         sequenceViewModel.setId(null)
         sequenceViewModel.setStatus(SequenceStatus.NEW)
 
-        val sequence = sequenceViewModelConverter.toModel(sequenceViewModel)
+        val sequence = vm.sequence.toModel(sequenceViewModel)
         val sequenceChannels = createSequenceChannels(sequence)
         val savedSequence = sequencePersistenceService.saveSequence(sequence, sequenceChannels)
 
@@ -139,7 +121,7 @@ open class SequenceController(
     open fun updateSequence(id: Int, sequenceViewModel: SequenceViewModel): HttpResponse<Any> {
         sequenceViewModel.setId(id) // Prevent client-side ID tampering.
 
-        val sequence = sequenceViewModelConverter.toModel(sequenceViewModel)
+        val sequence = vm.sequence.toModel(sequenceViewModel)
         val channels = sequenceViewModel.getChannels()
             .asSequence()
             .map(sequenceChannelViewModelConverter::toModel)
@@ -189,7 +171,7 @@ open class SequenceController(
     @Delete("/{id}")
     @Transactional
     open fun deleteSequence(id: Int): HttpResponse<Any> {
-        sequencePersistenceService.deleteSequence(id)
+        db.deleteById<Sequence>(id)
         return HttpResponse.ok()
     }
 
@@ -202,7 +184,7 @@ open class SequenceController(
         @QueryValue(defaultValue = "0") frameCount: String,
         sequenceViewModel: SequenceViewModel
     ): HttpResponse<Any> {
-        val sequence = sequenceViewModelConverter.toModel(sequenceViewModel)
+        val sequence = vm.sequence.toModel(sequenceViewModel)
         val sequenceChannels = sequenceViewModel.getChannels()
             .asSequence()
             .map(sequenceChannelViewModelConverter::toModel)

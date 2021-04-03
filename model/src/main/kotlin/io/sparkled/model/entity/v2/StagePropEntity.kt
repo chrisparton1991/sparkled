@@ -19,5 +19,5 @@ data class StagePropEntity(
     val scaleY: Float = 1f,
     val rotation: Int = 0,
     val brightness: Int = 15, // TODO move to constant
-    val displayOrder: Int = 0,
+    val displayOrder: Int = -1,
 )

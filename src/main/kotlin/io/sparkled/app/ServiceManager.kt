@@ -15,11 +15,11 @@ import javax.inject.Singleton
 
 @Singleton
 open class ServiceManager(
+    private val db: DbService,
     private val schedulerService: SchedulerService,
     private val udpServer: UdpServer,
     private val ledDataStreamer: LedDataStreamer,
     private val pluginManager: SparkledPluginManager,
-    private val db: DbService
 ) {
 
     @EventListener
@@ -28,6 +28,7 @@ open class ServiceManager(
         pluginManager.reloadPlugins()
         schedulerService.start()
         db.init()
+        // TODO load settings cache
 
         val socket = buildSocket()
         udpServer.start(socket)

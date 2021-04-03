@@ -1,19 +1,9 @@
 package io.sparkled.persistence
 
 import io.sparkled.model.util.IdUtils
-import io.sparkled.persistence.playlist.PlaylistPersistenceService
-import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
-import io.sparkled.persistence.sequence.SequencePersistenceService
-import io.sparkled.persistence.song.SongPersistenceService
-import io.sparkled.persistence.stage.StagePersistenceService
 import io.sparkled.persistence.v2.query.common.*
 
 interface DbService {
-    val playlist: PlaylistPersistenceService
-    val scheduledJob: ScheduledJobPersistenceService
-    val sequence: SequencePersistenceService
-    val song: SongPersistenceService
-    val stage: StagePersistenceService
     fun init()
     fun <T> query(query: DbQuery<T>): T
 }
@@ -35,6 +25,12 @@ inline fun <reified T : Any> DbService.insert(entity: T): String {
 
 inline fun <reified T : Any> DbService.update(entity: T, vararg fieldsToUpdate: String) {
     return query(UpdateQuery(entity, *fieldsToUpdate))
+}
+
+inline fun <reified T : Any> DbService.deleteById(id: Any) {
+    getById<T>(id)?.let {
+        delete(it)
+    }
 }
 
 inline fun <reified T : Any> DbService.delete(entity: T) {

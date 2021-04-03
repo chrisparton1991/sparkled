@@ -7,38 +7,33 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
 import io.micronaut.spring.tx.annotation.Transactional
 import io.sparkled.model.entity.v2.ScheduledJobEntity
-import io.sparkled.persistence.DbService
-import io.sparkled.persistence.getAll
-import io.sparkled.persistence.scheduledjob.ScheduledJobPersistenceService
+import io.sparkled.persistence.*
 import io.sparkled.rest.response.IdResponse
 import io.sparkled.scheduler.SchedulerService
+import io.sparkled.viewmodel.ViewModelConverterService
 import io.sparkled.viewmodel.scheduledjob.ScheduledJobViewModel
-import io.sparkled.viewmodel.scheduledjob.ScheduledJobViewModelConverter
-import io.sparkled.viewmodel.scheduledjob.search.ScheduledJobSearchViewModelConverter
 
 @Controller("/api/scheduledJobs")
 open class ScheduledJobController(
     private val db: DbService,
     private val schedulerService: SchedulerService,
-    private val scheduledJobPersistenceService: ScheduledJobPersistenceService,
-    private val scheduledJobSearchViewModelConverter: ScheduledJobSearchViewModelConverter,
-    private val scheduledJobViewModelConverter: ScheduledJobViewModelConverter
+    private val vm: ViewModelConverterService
 ) {
 
     @Get("/")
     @Transactional(readOnly = true)
     open fun getAllScheduledJobs(): HttpResponse<Any> {
         val scheduledJobs = db.getAll<ScheduledJobEntity>(orderBy = "id")
-        return HttpResponse.ok(scheduledJobSearchViewModelConverter.toViewModels(scheduledJobs))
+        return HttpResponse.ok(vm.scheduledJobSearch.toViewModels(scheduledJobs))
     }
 
     @Get("/{id}")
     @Transactional(readOnly = true)
     open fun getScheduledJob(id: Int): HttpResponse<Any> {
-        val scheduledJob = scheduledJobPersistenceService.getScheduledJobById(id)
+        val scheduledJob = db.getById<ScheduledJobEntity>(id)
 
         if (scheduledJob != null) {
-            val viewModel = scheduledJobViewModelConverter.toViewModel(scheduledJob)
+            val viewModel = vm.scheduledJob.toViewModel(scheduledJob)
             return HttpResponse.ok(viewModel)
         }
 
@@ -48,17 +43,18 @@ open class ScheduledJobController(
     @Post("/")
     @Transactional
     open fun createScheduledJob(scheduledJobViewModel: ScheduledJobViewModel): HttpResponse<Any> {
-        val scheduledJob = scheduledJobViewModelConverter.toModel(scheduledJobViewModel)
-        val savedScheduledJob = scheduledJobPersistenceService.createScheduledJob(scheduledJob)
+        val scheduledJob = vm.scheduledJob.toModel(scheduledJobViewModel)
+        val scheduledJobId = db.insert(scheduledJob)
         schedulerService.reload()
-        return HttpResponse.ok(IdResponse(savedScheduledJob.id!!))
+        return HttpResponse.ok(IdResponse(scheduledJobId.toInt()))
     }
 
     @Delete("/{id}")
     @Transactional
     open fun deleteScheduledJob(id: Int): HttpResponse<Any> {
-        scheduledJobPersistenceService.deleteScheduledJob(id)
-        schedulerService.reload()
+        val scheduledJob = db.getById<ScheduledJobEntity>(id)
+        scheduledJob?.let { db.delete(it) }
+
         return HttpResponse.ok()
     }
 }

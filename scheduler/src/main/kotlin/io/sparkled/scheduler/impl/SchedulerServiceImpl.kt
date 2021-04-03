@@ -7,6 +7,7 @@ import io.sparkled.model.entity.v2.ScheduledJobEntity
 import io.sparkled.model.setting.SettingsConstants
 import io.sparkled.music.PlaybackService
 import io.sparkled.persistence.DbService
+import io.sparkled.persistence.cache.CacheService
 import io.sparkled.persistence.getAll
 import io.sparkled.persistence.v2.query.sequence.GetSequencesByPlaylistIdQuery
 import io.sparkled.persistence.v2.query.setting.UpdateSettingQuery
@@ -18,6 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 open class SchedulerServiceImpl(
+    private val cache: CacheService,
     private val db: DbService,
     private val playbackService: PlaybackService
 ) : SchedulerService {
@@ -103,6 +105,7 @@ open class SchedulerServiceImpl(
     open fun setBrightness(job: ScheduledJob) {
         val brightness = (job.value ?: "0")
         db.query(UpdateSettingQuery(
+            cache = cache,
             code = SettingsConstants.Brightness.CODE,
             value = brightness
         ))

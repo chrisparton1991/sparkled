@@ -73,10 +73,7 @@ open class PlaylistController(
     @Delete("/{id}")
     @Transactional
     open fun deletePlaylist(id: Int): HttpResponse<Any> {
-        db.getById<PlaylistEntity>(id)?.let {
-            db.delete(this)
-        }
-
+        db.getById<PlaylistEntity>(id)?.let { db.delete(it) }
         return HttpResponse.ok()
     }
 }
